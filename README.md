@@ -8,9 +8,9 @@ A full-duplex, synthesizable Universal Asynchronous Receiver-Transmitter (UART) 
 
 ```mermaid
 flowchart TD
-    clk["50 MHz System Clock"] --> baud_gen["Baud Rate Generator\n(baud_gen.v)"]
-    baud_gen -->|tick_1x (115200 Baud)| tx["UART Transmitter\n(uart_tx.v)"]
-    baud_gen -->|tick_16x (16x Oversample)| rx["UART Receiver\n(uart_rx.v)"]
+    clk["50 MHz System Clock"] --> baud_gen["Baud Rate Generator<br/>baud_gen.v"]
+    baud_gen -->|tick_1x: 115200 Baud| tx["UART Transmitter<br/>uart_tx.v"]
+    baud_gen -->|tick_16x: 16x Oversample| rx["UART Receiver<br/>uart_rx.v"]
     
     subgraph Transmission ["Transmitter Path"]
         tx_data["tx_data[7:0]"] --> tx
@@ -22,7 +22,7 @@ flowchart TD
         uart_rx_pin["UART RX Pin"] --> rx_sync["2-Stage D-FF Sync"]
         rx_sync --> rx
         rx --> rx_data["rx_data[7:0]"]
-        rx --> rx_valid["rx_valid (1-cycle pulse)"]
+        rx --> rx_valid["rx_valid pulse"]
         rx --> frame_error["frame_error flag"]
     end
 ```
@@ -34,16 +34,16 @@ flowchart TD
 ```mermaid
 stateDiagram-v2
     [*] --> STATE_IDLE
-    STATE_IDLE --> STATE_START : rx falling edge (0 detected)
+    STATE_IDLE --> STATE_START : rx falling edge detected
     
-    STATE_START --> STATE_DATA : sample tick 7 (center of start bit == 0)
-    STATE_START --> STATE_IDLE : false alarm / line glitch (sample == 1)
+    STATE_START --> STATE_DATA : tick 7 confirmed (sample center == 0)
+    STATE_START --> STATE_IDLE : false alarm / line glitch
     
-    STATE_DATA --> STATE_DATA : sample at tick 15 (center of bit), shift into register
+    STATE_DATA --> STATE_DATA : sample at tick 15, shift into register
     STATE_DATA --> STATE_STOP : all 8 data bits received
     
-    STATE_STOP --> STATE_IDLE : sample stop bit at tick 15 (rx == 1: assert rx_valid)
-    STATE_STOP --> STATE_IDLE : stop bit != 1 (assert frame_error)
+    STATE_STOP --> STATE_IDLE : valid stop bit (assert rx_valid)
+    STATE_STOP --> STATE_IDLE : invalid stop bit (assert frame_error)
 ```
 
 ---
